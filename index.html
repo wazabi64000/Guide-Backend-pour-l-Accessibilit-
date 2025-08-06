@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guide Accessibilité Backend</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Menu principal">
+    <ul>
+      <li><a href="index.html" aria-current="page">Accueil</a></li>
+      <li><a href="visual.html">Handicap visuel</a></li>
+      <li><a href="hearing.html">Malentendants</a></li>
+      <li><a href="cognitive.html">Handicap cognitif</a></li>
+      <li><a href="mobility.html">Mobilité réduite</a></li>
+      <li><a href="security.html">Sécurité & accessibilité</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h1>Guide Backend pour l’Accessibilité</h1>
+
+    <section>
+      <p>
+        Ce guide s’adresse aux développeurs web souhaitant intégrer des solutions backend pour améliorer l’accessibilité de leurs applications,
+        en tenant compte des différents types de handicaps : visuel, auditif, cognitif, mobilité réduite, ainsi que les aspects de sécurité.
+      </p>
+
+      <h2>Structure du guide</h2>
+      <ul>
+        <li><strong>Handicap visuel</strong> : APIs Text-to-Speech, SSML, streaming audio</li>
+        <li><strong>Malentendants</strong> : Speech-to-Text, génération de sous-titres, WebVTT</li>
+        <li><strong>Handicap cognitif / dyslexie</strong> : simplification de contenu, typographie adaptée, glossaire</li>
+        <li><strong>Mobilité réduite</strong> : navigation vocale, raccourcis clavier, préférences UI</li>
+        <li><strong>Sécurité & accessibilité</strong> : authentification alternative, CAPTCHA accessibles</li>
+      </ul>
+
+      <h2>Utilisation des modules ES (ESM) côté backend</h2>
+      <p>
+        Tous les exemples de code backend présentés utilisent le format ES Modules (import/export). Ce format moderne facilite l’organisation du code
+        et est désormais supporté nativement dans Node.js (à condition d’utiliser <code>type": "module"</code> dans <code>package.json</code>).
+      </p>
+
+      <h3>Exemple simple (Node.js ESM)</h3>
+      <pre><code class="language-js">
+// fichier tts.js
+import textToSpeech from '@google-cloud/text-to-speech';
+import fs from 'fs/promises';
+
+const client = new textToSpeech.TextToSpeechClient();
+
+export async function generateAudio(text, outputFile) {
+  const request = {
+    input: { text },
+    voice: { languageCode: 'fr-FR', ssmlGender: 'FEMALE' },
+    audioConfig: { audioEncoding: 'MP3' },
+  };
+  const [response] = await client.synthesizeSpeech(request);
+  await fs.writeFile(outputFile, response.audioContent, 'binary');
+  console.log('Audio généré:', outputFile);
+}
+      </code></pre>
+
+      <p>
+        Le fichier ci-dessus illustre une fonction exportée au format ES Module pour générer un fichier audio à partir de texte.
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Guide Accessibilité Backend</p>
+  </footer>
+
+</body>
+</html>

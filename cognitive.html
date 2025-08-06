@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Handicap cognitif - Guide Backend Accessibilité</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Menu principal">
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="visual.html">Handicap visuel</a></li>
+      <li><a href="hearing.html">Malentendants</a></li>
+      <li><a href="cognitive.html" aria-current="page">Handicap cognitif</a></li>
+      <li><a href="mobility.html">Mobilité réduite</a></li>
+      <li><a href="security.html">Sécurité & accessibilité</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h1>Accessibilité - Handicap cognitif et dyslexie</h1>
+
+    <section>
+      <h2>Présentation</h2>
+      <p>
+        Ce guide aborde les techniques backend pour améliorer l’accessibilité des personnes avec troubles cognitifs ou dyslexie, notamment la simplification de texte et la conversion en formats adaptés.
+      </p>
+    </section>
+
+    <section>
+      <h2>1. Simplification automatique de texte</h2>
+      <p>
+        Utiliser des API ou bibliothèques pour reformuler ou simplifier les textes lourds, afin de les rendre plus compréhensibles.
+      </p>
+
+      <h3>Exemple backend Node.js (ESM) avec la librairie <code>text-simplify</code> (hypothétique)</h3>
+      <pre><code class="language-js">
+// simplify.js
+import { simplifyText } from 'text-simplify';
+
+export function getSimplifiedText(text) {
+  return simplifyText(text, { language: 'fr' });
+}
+      </code></pre>
+
+      <h3>Serveur Express simple (ESM)</h3>
+      <pre><code class="language-js">
+import express from 'express';
+import { getSimplifiedText } from './simplify.js';
+
+const app = express();
+app.use(express.json());
+
+app.post('/simplify-text', (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).send('Texte requis');
+
+  try {
+    const simplified = getSimplifiedText(text);
+    res.json({ simplified });
+  } catch (error) {
+    res.status(500).send('Erreur lors de la simplification : ' + error.message);
+  }
+});
+
+app.listen(3000, () => console.log('Serveur simplification en écoute'));
+      </code></pre>
+    </section>
+
+    <section>
+      <h2>2. Conversion en formats adaptés</h2>
+      <p>
+        Générer des versions en audio (Text-to-Speech) ou en formats braille compatibles.
+      </p>
+    </section>
+
+    <section>
+      <h2>3. Recommandations pour l’accessibilité cognitive</h2>
+      <ul>
+        <li>Préférer un langage simple et clair.</li>
+        <li>Proposer des aides contextuelles (glossaires, images).</li>
+        <li>Permettre la personnalisation de l’affichage (taille, police).</li>
+        <li>Tester régulièrement avec des utilisateurs concernés.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Guide Accessibilité Backend</p>
+  </footer>
+
+</body>
+</html>

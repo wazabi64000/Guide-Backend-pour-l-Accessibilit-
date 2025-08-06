@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sécurité & Accessibilité - Guide Backend</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Menu principal">
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="visual.html">Handicap visuel</a></li>
+      <li><a href="hearing.html">Malentendants</a></li>
+      <li><a href="cognitive.html">Handicap cognitif</a></li>
+      <li><a href="mobility.html">Mobilité réduite</a></li>
+      <li><a href="security.html" aria-current="page">Sécurité & Accessibilité</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h1>Sécurité & Accessibilité</h1>
+
+    <section>
+      <h2>Objectifs</h2>
+      <p>
+        Garantir un accès sécurisé aux services web tout en préservant l’accessibilité pour tous les utilisateurs, y compris ceux en situation de handicap.
+      </p>
+    </section>
+
+    <section>
+      <h2>1. Authentification accessible (WebAuthn)</h2>
+      <p>
+        L’API WebAuthn permet une authentification forte par empreinte, visage ou clé physique – sans dépendre du mot de passe. Idéal pour les utilisateurs ayant des difficultés cognitives ou motrices.
+      </p>
+
+      <h3>Exemple en Node.js avec <code>fido2-lib</code></h3>
+      <pre><code class="language-js">
+// server/webauthn.js (ESM)
+import express from 'express';
+import { Fido2Lib } from 'fido2-lib';
+
+const fido2 = new Fido2Lib({
+  rpName: 'Mon Application',
+  rpId: 'localhost',
+  challengeSize: 64,
+  timeout: 60000,
+});
+
+const users = {};
+const app = express();
+app.use(express.json());
+
+app.post('/register-request', async (req, res) => {
+  const { username } = req.body;
+  const user = {
+    id: Buffer.from(username, 'utf8'),
+    name: username,
+    displayName: username,
+  };
+
+  const options = await fido2.attestationOptions();
+  options.user = user;
+  users[username] = { options };
+
+  res.json(options);
+});
+      </code></pre>
+
+      <p><strong> Avantages :</strong> pas de mot de passe à retenir, compatible avec les lecteurs d’écran et dispositifs biométriques.</p>
+    </section>
+
+    <section>
+      <h2>2. CAPTCHA accessible</h2>
+      <p>
+        Les CAPTCHA classiques (images illisibles) posent problème. Utilisez des alternatives inclusives comme :
+        <ul>
+          <li><strong>hCaptcha avec mode audio</strong></li>
+          <li><strong>FriendlyCaptcha</strong> (pas d’image, logique mathématique simple)</li>
+        </ul>
+      </p>
+
+      <h3>Exemple de vérification backend avec hCaptcha</h3>
+      <pre><code class="language-js">
+// server/verifyCaptcha.js (ESM)
+import express from 'express';
+import fetch from 'node-fetch';
+
+const app = express();
+app.use(express.json());
+
+app.post('/verify-captcha', async (req, res) => {
+  const { token } = req.body;
+  const secret = process.env.HCAPTCHA_SECRET;
+
+  const response = await fetch('https://hcaptcha.com/siteverify', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `secret=${secret}&response=${token}`,
+  });
+
+  const result = await response.json();
+  if (result.success) {
+    res.send('CAPTCHA validé');
+  } else {
+    res.status(400).send('Échec CAPTCHA');
+  }
+});
+      </code></pre>
+    </section>
+
+    <section>
+      <h2>3. Bonnes pratiques</h2>
+      <ul>
+        <li>Ne jamais forcer une méthode unique d’authentification.</li>
+        <li>Ajouter des labels clairs sur les champs de sécurité.</li>
+        <li>Prévoir des alternatives audio/texte pour chaque étape.</li>
+        <li>Testez vos interfaces avec des outils comme VoiceOver ou NVDA.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Guide Accessibilité - Backend</p>
+  </footer>
+
+</body>
+</html>

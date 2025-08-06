@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Malentendants - Guide Backend Accessibilité</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Menu principal">
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="visual.html">Handicap visuel</a></li>
+      <li><a href="hearing.html" aria-current="page">Malentendants</a></li>
+      <li><a href="cognitive.html">Handicap cognitif</a></li>
+      <li><a href="mobility.html">Mobilité réduite</a></li>
+      <li><a href="security.html">Sécurité & accessibilité</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h1>Accessibilité - Malentendants</h1>
+
+    <section>
+      <h2>Présentation</h2>
+      <p>
+        Ce guide détaille les solutions backend pour améliorer l’accessibilité aux personnes malentendantes, notamment la conversion audio → texte et la gestion de sous-titres.
+      </p>
+    </section>
+
+    <section>
+      <h2>1. Conversion audio vers texte (Speech-to-Text)</h2>
+      <p>
+        Utilisation d’API comme Google Cloud Speech-to-Text pour transcrire les flux audio en temps réel ou en différé.
+      </p>
+
+      <h3>Exemple Node.js (ESM) avec Google Cloud Speech-to-Text</h3>
+      <pre><code class="language-js">
+// speechToText.js
+import speech from '@google-cloud/speech';
+
+const client = new speech.SpeechClient();
+
+export async function transcribeAudio(audioBuffer) {
+  const request = {
+    audio: { content: audioBuffer.toString('base64') },
+    config: {
+      encoding: 'LINEAR16',
+      sampleRateHertz: 16000,
+      languageCode: 'fr-FR',
+    },
+  };
+
+  const [response] = await client.recognize(request);
+  return response.results.map(result => result.alternatives[0].transcript).join('\n');
+}
+      </code></pre>
+
+      <h3>Serveur Express simple (ESM) pour recevoir un audio et retourner la transcription</h3>
+      <pre><code class="language-js">
+import express from 'express';
+import { transcribeAudio } from './speechToText.js';
+
+const app = express();
+app.use(express.json({ limit: '10mb' }));
+
+app.post('/audio-transcription', async (req, res) => {
+  try {
+    const { audioBase64 } = req.body;
+    if (!audioBase64) return res.status(400).send('Audio requis');
+
+    const audioBuffer = Buffer.from(audioBase64, 'base64');
+    const transcript = await transcribeAudio(audioBuffer);
+    res.json({ transcript });
+  } catch (error) {
+    res.status(500).send('Erreur transcription : ' + error.message);
+  }
+});
+
+app.listen(3000, () => console.log('Serveur Speech-to-Text en écoute'));
+      </code></pre>
+    </section>
+
+    <section>
+      <h2>2. Sous-titrage automatique</h2>
+      <p>
+        Le backend peut générer des fichiers de sous-titres (SRT, VTT) à partir des transcriptions, pour les vidéos ou streams.
+      </p>
+
+      <h3>Exemple simple de génération SRT à partir d’un texte (Node.js ESM)</h3>
+      <pre><code class="language-js">
+// subtitleGenerator.js
+export function generateSRT(transcripts) {
+  return transcripts.map((item, index) => {
+    const start = new Date(item.start).toISOString().substr(11, 12).replace('.', ',');
+    const end = new Date(item.end).toISOString().substr(11, 12).replace('.', ',');
+    return `${index + 1}
+${start} --> ${end}
+${item.text}
+`;
+  }).join('\n');
+}
+      </code></pre>
+    </section>
+
+    <section>
+      <h2>3. Bonnes pratiques</h2>
+      <ul>
+        <li>Proposer la transcription en temps réel si possible.</li>
+        <li>Utiliser des formats standard pour les sous-titres (SRT, VTT).</li>
+        <li>Tester la lisibilité et la synchronisation des sous-titres.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Guide Accessibilité Backend</p>
+  </footer>
+
+</body>
+</html>

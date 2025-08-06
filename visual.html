@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Handicap visuel - Guide Backend Accessibilité</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Menu principal">
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="visual.html" aria-current="page">Handicap visuel</a></li>
+      <li><a href="hearing.html">Malentendants</a></li>
+      <li><a href="cognitive.html">Handicap cognitif</a></li>
+      <li><a href="mobility.html">Mobilité réduite</a></li>
+      <li><a href="security.html">Sécurité & accessibilité</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h1>Accessibilité - Handicap visuel</h1>
+
+    <section>
+      <h2>Présentation</h2>
+      <p>
+        Ce guide explique comment intégrer côté backend des outils pour aider les personnes malvoyantes, notamment les technologies Text-to-Speech (TTS) et le Speech Synthesis Markup Language (SSML).
+      </p>
+    </section>
+
+    <section>
+      <h2>1. Google Cloud Text-to-Speech (TTS)</h2>
+      <p>
+        Cette API convertit du texte en audio, facilitant la lecture aux personnes malvoyantes.
+      </p>
+
+      <h3>Exemple backend Node.js (ESM)</h3>
+      <pre><code class="language-js">
+// tts.js
+import textToSpeech from '@google-cloud/text-to-speech';
+import fs from 'fs/promises';
+
+const client = new textToSpeech.TextToSpeechClient();
+
+export async function generateAudio(text, outputFile) {
+  const request = {
+    input: { text },
+    voice: { languageCode: 'fr-FR', ssmlGender: 'FEMALE' },
+    audioConfig: { audioEncoding: 'MP3' },
+  };
+  const [response] = await client.synthesizeSpeech(request);
+  await fs.writeFile(outputFile, response.audioContent, 'binary');
+  console.log('Audio généré:', outputFile);
+}
+      </code></pre>
+
+      <h3>Serveur Express simple (ESM)</h3>
+      <pre><code class="language-js">
+import express from 'express';
+import { generateAudio } from './tts.js';
+
+const app = express();
+app.use(express.json());
+
+app.post('/tts', async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).send('Texte requis');
+
+  const outputFile = 'output.mp3';
+  await generateAudio(text, outputFile);
+  res.download(outputFile);
+});
+
+app.listen(3000, () => console.log('Serveur TTS en écoute sur le port 3000'));
+      </code></pre>
+    </section>
+
+    <section>
+      <h2>2. Speech Synthesis Markup Language (SSML)</h2>
+      <p>
+        SSML permet de contrôler la prononciation, les pauses, la vitesse, et l’intonation dans les fichiers audio.
+      </p>
+      <p>Voici un exemple de requête utilisant SSML dans le backend :</p>
+      <pre><code class="language-js">
+const request = {
+  input: { ssml: '&lt;speak&gt;Bonjour, &lt;break time="500ms"/&gt; bienvenue !&lt;/speak&gt;' },
+  voice: { languageCode: 'fr-FR', ssmlGender: 'FEMALE' },
+  audioConfig: { audioEncoding: 'MP3' },
+};
+      </code></pre>
+    </section>
+
+    <section>
+      <h2>3. Amazon Polly (alternative)</h2>
+      <p>
+        Amazon Polly offre aussi des voix naturelles et de nombreuses langues. Le principe d’intégration backend est similaire : envoi du texte → réception d’un fichier audio.
+      </p>
+    </section>
+
+    <section>
+      <h2>4. Streaming de fichiers audio côté backend</h2>
+      <p>
+        Le backend peut envoyer directement les fichiers audio générés en streaming pour éviter d’enregistrer localement.
+      </p>
+
+      <pre><code class="language-js">
+app.post('/tts-stream', async (req, res) => {
+  const { text } = req.body;
+  const request = {
+    input: { text },
+    voice: { languageCode: 'fr-FR', ssmlGender: 'FEMALE' },
+    audioConfig: { audioEncoding: 'MP3' },
+  };
+  const [response] = await client.synthesizeSpeech(request);
+  res.set('Content-Type', 'audio/mpeg');
+  res.send(response.audioContent);
+});
+      </code></pre>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Guide Accessibilité Backend</p>
+  </footer>
+
+</body>
+</html>

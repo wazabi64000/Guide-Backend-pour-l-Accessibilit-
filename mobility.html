@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mobilité réduite - Guide Backend Accessibilité</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <nav class="navbar" role="navigation" aria-label="Menu principal">
+    <ul>
+      <li><a href="index.html">Accueil</a></li>
+      <li><a href="visual.html">Handicap visuel</a></li>
+      <li><a href="hearing.html">Malentendants</a></li>
+      <li><a href="cognitive.html">Handicap cognitif</a></li>
+      <li><a href="mobility.html" aria-current="page">Mobilité réduite</a></li>
+      <li><a href="security.html">Sécurité & accessibilité</a></li>
+    </ul>
+  </nav>
+
+  <main>
+    <h1>Accessibilité - Mobilité réduite</h1>
+
+    <section>
+      <h2>Présentation</h2>
+      <p>
+        Ce guide présente des solutions backend pour faciliter l’accès web aux personnes avec mobilité réduite, notamment par l’automatisation de commandes vocales et la gestion d’entrées alternatives.
+      </p>
+    </section>
+
+    <section>
+      <h2>1. Commandes vocales backend (Speech Recognition)</h2>
+      <p>
+        Utilisation d’API comme Google Speech-to-Text pour interpréter les commandes vocales envoyées par le client.
+      </p>
+
+      <h3>Exemple Node.js (ESM) avec Google Cloud Speech-to-Text</h3>
+      <pre><code class="language-js">
+// speechRecognition.js
+import speech from '@google-cloud/speech';
+
+const client = new speech.SpeechClient();
+
+export async function transcribeAudio(audioBuffer) {
+  const request = {
+    audio: { content: audioBuffer.toString('base64') },
+    config: {
+      encoding: 'LINEAR16',
+      sampleRateHertz: 16000,
+      languageCode: 'fr-FR',
+    },
+  };
+
+  const [response] = await client.recognize(request);
+  return response.results.map(result => result.alternatives[0].transcript).join('\n');
+}
+      </code></pre>
+
+      <h3>Serveur Express simple (ESM) pour recevoir audio et renvoyer transcription</h3>
+      <pre><code class="language-js">
+import express from 'express';
+import { transcribeAudio } from './speechRecognition.js';
+
+const app = express();
+app.use(express.json({ limit: '10mb' })); // Adapté au flux audio encodé base64
+
+app.post('/speech-to-text', async (req, res) => {
+  try {
+    const { audioBase64 } = req.body;
+    if (!audioBase64) return res.status(400).send('Audio requis');
+
+    const audioBuffer = Buffer.from(audioBase64, 'base64');
+    const transcript = await transcribeAudio(audioBuffer);
+    res.json({ transcript });
+  } catch (error) {
+    res.status(500).send('Erreur transcription : ' + error.message);
+  }
+});
+
+app.listen(3000, () => console.log('Serveur Speech-to-Text en écoute'));
+      </code></pre>
+    </section>
+
+    <section>
+      <h2>2. Gestion des entrées alternatives</h2>
+      <p>
+        Le backend doit aussi gérer des formats et protocoles compatibles avec des dispositifs d’assistance (joysticks, boutons adaptatifs, claviers alternatifs).
+      </p>
+      <p>
+        Par exemple, prévoir des API REST pour recevoir des événements d’actions spécifiques venant de périphériques personnalisés.
+      </p>
+    </section>
+
+    <section>
+      <h2>3. Bonnes pratiques</h2>
+      <ul>
+        <li>Prendre en charge les formats audio et les flux temps réel.</li>
+        <li>Assurer un traitement rapide pour les commandes critiques.</li>
+        <li>Documenter clairement les APIs destinées aux dispositifs d’assistance.</li>
+        <li>Faire des tests avec des utilisateurs ayant des besoins spécifiques.</li>
+      </ul>
+    </section>
+
+  </main>
+
+  <footer>
+    <p>&copy; 2025 Guide Accessibilité Backend</p>
+  </footer>
+
+</body>
+</html>
